@@ -8,7 +8,7 @@ const staffMembers = [
     { name: "Helper123", role: "support", username: "helper3", password: "help123" }
 ];
 
-// Cookie utility functions
+// Cookie utility functions - consistent approach
 const CookieUtil = {
     setCookie(name, value, days) {
         try {
@@ -37,6 +37,10 @@ const CookieUtil = {
             console.error("Error getting cookie:", error);
             return null;
         }
+    },
+    
+    deleteCookie(name) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
     }
 };
 
@@ -99,12 +103,17 @@ function checkLogin() {
 }
 
 // Event Listeners
-loginBtn.addEventListener('click', handleLogin);
-loginPassword.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') {
-        handleLogin();
-    }
-});
+if (loginBtn) {
+    loginBtn.addEventListener('click', handleLogin);
+}
+
+if (loginPassword) {
+    loginPassword.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
+    });
+}
 
 // Check login status when page loads
 window.addEventListener('DOMContentLoaded', checkLogin);
