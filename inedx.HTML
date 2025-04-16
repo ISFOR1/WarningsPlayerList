@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Warnings System</title>
+    <style>
+        :root {
+            --primary-color: #3a86ff;
+            --secondary-color: #ff006e;
+            --success-color: #38b000;
+            --warning-color: #ffbe0b;
+            --danger-color: #d90429;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --primary-color: #4d9fff;
+            --secondary-color: #ff2e7e;
+            --success-color: #4cc419;
+            --warning-color: #ffc72c;
+            --danger-color: #e82a46;
+            --light-color: #343a40;
+            --dark-color: #f8f9fa;
+            --gray-color: #adb5bd;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --bg-color: #1a1d21;
+            --card-bg: #2a2d35;
+            --input-bg: #3a3f48;
+            --border-color: #444a54;
+            --text-light: #e0e0e0;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --border-color: #e9ecef;
+            --text-light: #212529;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--bg-color);
+            padding: 20px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            position: relative;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: var(--dark-color);
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        
+        .warning-form {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            transition: var(--transition);
+            background-color: var(--input-bg);
+            color: var(--dark-color);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.1);
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2a75e8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #2d9d00;
+            transform: translateY(-2px);
+        }
+        
+        .btn-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        #add-warning-btn {
+            margin-bottom: 20px;
+        }
+        
+        .warning-item {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+        
+        .warning-item:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .warning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .warning-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .warning-subtitle {
+            color: var(--gray-color);
+            font-size: 14px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .warning-count {
+            background-color: var(--danger-color);
+            color: white;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .warning-detail {
+            padding: 15px;
+            background-color: var(--light-color);
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .warning-number {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .warning-reason {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .warning-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--gray-color);
+            margin-top: 10px;
+        }
+        
+        .warning-staff {
+            font-style: italic;
+        }
+        
+        .warning-date {
+            text-align: right;
+        }
+        
+        .banned {
+            background-color: var(--danger-color);
+            background-color: rgba(217, 4, 41, 0.1);
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .banned .warning-title::after {
+            content: " - BANNED";
+            color: var(--danger-color);
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--card-bg);
+            min-width: 200px;
+            width: 100%;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+        
+        .dropdown-content div {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--dark-color);
+        }
+        
+        .dropdown-content div:hover {
+            background-color: var(--light-color);
+        }
+        
+        .show {
+            display: block;
+        }
+        
+        .staff-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .staff-role {
+            background-color: var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .role-owner {
+            background-color: #ffd700;
+            color: #856404;
+        }
+        
+        .role-high-support {
+            background-color: #9c27b0;
+            color: white;
+        }
+        
+        .role-support {
+            background-color: #2196f3;
+            color: white;
+        }
+        
+        .empty-list {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-color);
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            border: 1px dashed var(--border-color);
+        }
+        
+        .actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .ban-checkbox {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: var(--danger-color);
+        }
+        
+        .ban-checkbox input {
+            width: auto;
+            margin-left: 10px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            align-items: center;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            margin-right: 15px;
+            position: relative;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+        }
+        
+        .filter-options {
+            display: flex;
+        }
+        
+        .filter-options label {
+            margin: 0 15px;
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .filter-options input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-banned {
+            background-color: var(--danger-color);
+        }
+        
+        .status-active {
+            background-color: var(--success-color);
+        }
+        
+        .status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .status-success {
+            background-color: var(--success-color);
+        }
+        
+        .status-error {
+            background-color: var(--danger-color);
+            display: none;
+        }
+
+        /* Theme Toggle */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-left: 15px;
+        }
+        
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .theme-icon {
+            position: absolute;
+            top: 6px;
+            font-size: 14px;
+            color: var(--dark-color);
+            transition: .4s;
+        }
+        
+        .sun-icon {
+            left: 7px;
+            opacity: 1;
+        }
+        
+        .moon-icon {
+            right: 7px;
+            opacity: 0;
+        }
+        
+        input:checked ~ .sun-icon {
+            opacity: 0;
+        }
+        
+        input:checked ~ .moon-icon {
+            opacity: 1;
+            color: white;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+        }
+        
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-title {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .login-subtitle {
+            color: var(--gray-color);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .login-form {
+            margin-bottom: 20px;
+        }
+        
+        .login-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .login-footer {
+            text-align: center;
+            color: var(--gray-color);
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        
+        .error-message {
+            background-color: rgba(217, 4, 41, 0.1);
+            color: var(--danger-color);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* Header Controls */
+        .header-controls {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logout-btn {
+            background-color: var(--danger-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 15px;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c02a30;
+        }
+        
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                margin-right: 0;
+                margin-bottom: 15px;
+                width: 100%;
+            }
+            
+            .warning-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .warning-count {
+                margin-top: 10px;
+            }
+            
+            .warning-meta {
+                flex-direction: column;
+            }
+            
+            .warning-date {
+                text-align: left;
+                margin-top: 5px;
+            }
+            
+            .header-controls {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 10px;
+            }
+            
+            .logout-btn {
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-page" class="login-container">
+        <div class="login-logo">
+            <h1 class="login-title">Player Warnings System</h1>
+            <p class="login-subtitle">Staff Access Only</p>
+        </div>
+        
+        <div class="error-message" id="login-error">
+            Invalid username or password. Please try again.
+        </div>
+        
+        <div class="login-form">
+            <div class="input-group">
+                <label for="login-username">Username:</label>
+                <input type="text" id="login-username" placeholder="Enter your username">
+            </div>
+            
+            <div class="input-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" placeholder="Enter your password">
+            </div>
+            
+            <button id="login-btn" class="btn btn-primary login-btn">Log In</button>
+        </div>
+        
+        <div class="login-footer">
+            <p>© 2025 MH Warnings System. All rights reserved.</p>
+        </div>
+    </div>
+
+    <div id="main-page" class="container" style="display: none;">
+        <header>
+            <h1>Player Warnings System</h1>
+            <div class="header-controls">
+                <div class="logout-btn" id="logout-btn">Log Out</div>
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                    <span class="theme-icon sun-icon">☀️</span>
+                    <span class="theme-icon moon-icon">🌙</span>
+                </label>
+            </div>
+            <div class="status status-success" id="save-status">Changes saved</div>
+            <div class="status status-error" id="error-status">Error saving changes</div>
+        </header>
+        
+        <button id="add-warning-btn" class="btn btn-primary">
+            <span class="btn-icon">+</span> Add New Warning
+        </button>
+        
+        <div id="warning-form" class="warning-form" style="display: none;">
+            <h2>Create New Warning</h2>
+            <div class="input-group">
+                <label for="username">Player Username:</label>
+                <input type="text" id="username" placeholder="Place here your Username">
+            </div>
+            
+            <div class="input-group">
+                <label for="reason">Warning Reason:</label>
+                <textarea id="reason" placeholder="Describe the reason for this warning"></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label for="staff">Your Discord Username:</label>
+                <div class="dropdown">
+                    <input type="text" id="staff" placeholder="Select staff member" readonly>
+                    <div id="staff-dropdown" class="dropdown-content">
+                        <!-- Staff list will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ban-checkbox">
+                <label for="ban-player">Ban this player:</label>
+                <input type="checkbox" id="ban-player">
+            </div>
+            
+            <button id="apply-btn" class="btn btn-success">Apply Warning</button>
+        </div>
+        
+        <div class="filters">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-player" placeholder="Search player...">
+            </div>
+            <div class="filter-options">
+                <label>
+                    <input type="checkbox" id="show-banned" checked>
+                    <span class="status-indicator status-banned"></span>
+                    Show Banned
+                </label>
+                <label>
+                    <input type="checkbox" id="show-active" checked>
+                    <span class="status-indicator status-active"></span>
+                    Show Active
+                </label>
+            </div>
+        </div>
+        
+        <div id="warnings-list">
+            <!-- Warnings will be populated by JavaScript -->
+            <div class="empty-list">No warnings found. Add your first warning using the button above.</div>
+        </div>
+    </div>
+
+    <script>
+        // Staff members data with login credentials
+        const staffMembers = [
+            { name: "IAMISFOR", role: "owner", username: "ISFOR", password: "ISFOR@ADMINACCESS" },
+            { name: "HeadMod456", role: "high-support", username: "headmod", password: "mod456" },
+            { name: "ModeratorA", role: "high-support", username: "modA", password: "modA789" },
+            { name: "Helper789", role: "support", username: "helper1", password: "help789" },
+            { name: "Helper456", role: "support", username: "helper2", password: "help456" },
+            { name: "Helper123", role: "support", username: "helper3", password: "help123" }
+        ];
+        
+        // Cookie utility functions
+        const CookieUtil = {
+            setCookie(name, value, days) {
+                try {
+                    const expires = new Date();
+                    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+                    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
+                    return true;
+                } catch (error) {
+                    console.error("Error setting cookie:", error);
+                    return false;
+                }
+            },
+            
+            getCookie(name) {
+                try {
+                    const cookieArr = document.cookie.split(";");
+                    for (let i = 0; i < cookieArr.length; i++) {
+                        const cookiePair = cookieArr[i].split("=");
+                        const cookieName = cookiePair[0].trim();
+                        if (cookieName === name) {
+                            return JSON.parse(decodeURIComponent(cookiePair[1]));
+                        }
+                    }
+                    return null;
+                } catch (error) {
+                    console.error("Error getting cookie:", error);
+                    return null;
+                }
+            },
+            
+            deleteCookie(name) {
+                document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+            }
+        };
+        
+        // Initialize warnings from cookies or start with empty array
+        let warnings = CookieUtil.getCookie('playerWarnings') || [];
+        let currentStaff = CookieUtil.getCookie('currentStaff') || null;
+        
+        // DOM Elements
+        const loginPage = document.getElementById('login-page');
+        const mainPage = document.getElementById('main-page');
+        const loginUsername = document.getElementById('login-username');
+        const loginPassword = document.getElementById('login-password');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        const addWarningBtn = document.getElementById('add-warning-btn');
+        const warningForm = document.getElementById('warning-form');
+        const warningsList = document.getElementById('warnings-list');
+        const usernameInput = document.getElementById('username');
+        const reasonInput = document.getElementById('reason');
+        const staffInput = document.getElementById('staff');
+        const staffDropdown = document.getElementById('staff-dropdown');
+        const banCheckbox = document.getElementById('ban-player');
+        const applyBtn = document.getElementById('apply-btn');
+        const searchInput = document.getElementById('search-player');
+        const showBannedCheckbox = document.getElementById('show-banned');
+        const showActiveCheckbox = document.getElementById('show-active');
+        const saveStatus = document.getElementById('save-status');
+        const errorStatus = document.getElementById('error-status');
+        
+        // Theme Management
+        function setTheme(isDark) {
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('dark-theme', isDark);
+            themeToggle.checked = isDark;
+        }
+        
+        // Check for saved theme preference or use user preference
+        const savedTheme = localStorage.getItem('dark-theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme !== null) {
+            setTheme(savedTheme === 'true');
+        } else {
+            setTheme(prefersDark);
+        }
+        
+        // Login System
+        function handleLogin() {
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value.trim();
+            
+            const staff = staffMembers.find(s => 
+                s.username === username && s.password === password
+            );
+            
+            if (staff) {
+                // Successful login
+                currentStaff = {
+                    name: staff.name,
+                    role: staff.role
+                };
+                
+                CookieUtil.setCookie('currentStaff', currentStaff, 1); // Save for 1 day
+                
+                // Show main page and hide login
+                loginPage.style.display = 'none';
+                mainPage.style.display = 'block';
+                
+                // Set staff input
+                staffInput.value = staff.name;
+                
+                // Initialize the page for the logged-in user
+                renderWarnings();
+                loginError.style.display = 'none';
+                
+                // Clear form fields
+                loginUsername.value = '';
+                loginPassword.value = '';
+            } else {
+                // Failed login
+                loginError.style.display = 'block';
+                loginPassword.value = '';
+            }
+        }
+        
+        function checkLogin() {
+            if (currentStaff) {
+                loginPage.style.display = 'none';
+                mainPage.style.display = 'block';
+                staffInput.value = currentStaff.name;
+            } else {
+                loginPage.style.display = 'block';
+                mainPage.style.display = 'none';
+            }
+        }
+        
+        function handleLogout() {
+            CookieUtil.deleteCookie('currentStaff');
+            currentStaff = null;
+            checkLogin();
+        }
+        
+        // Event Listeners
+        loginBtn.addEventListener('click', handleLogin);
+        loginPassword.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+        logoutBtn.addEventListener('click', handleLogout);
+        themeToggle.addEventListener('change', () => {
+            setTheme(themeToggle.checked);
+        });
+        addWarningBtn.addEventListener('click', toggleWarningForm);
+        applyBtn.addEventListener('click', addWarning);
+        staffInput.addEventListener('click', toggleStaffDropdown);
+        searchInput.addEventListener('input', filterWarnings);
+        showBannedCheckbox.addEventListener('change', filterWarnings);
+        showActiveCheckbox.addEventListener('change', filterWarnings);
+        
+        // Initialize the page
+        populateStaffDropdown();
+        checkLogin();
+        
+        // Functions
+        function toggleWarningForm() {
+            warningForm.style.display = warningForm.style.display === 'none' ? 'block' : 'none';
+            if (warningForm.style.display === 'block') {
+                usernameInput.focus();
+            }
+        }
+        
+        function populateStaffDropdown() {
+            staffDropdown.innerHTML = '';
+            staffMembers.forEach(staff => {
+                const staffElement = document.createElement('div');
+                staffElement.className = 'staff-item';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = staff.name;
+                
+                const roleSpan = document.createElement('span');
+                roleSpan.className = `staff-role role-${staff.role}`;
+                roleSpan.textContent = staff.role.replace('-', ' ');
+                
+                staffElement.appendChild(nameSpan);
+                staffElement.appendChild(roleSpan);
+                
+                staffElement.addEventListener('click', () => {
+                    staffInput.value = staff.name;
+                    toggleStaffDropdown();
+                });
+                
+                staffDropdown.appendChild(staffElement);
+            });
+        }
+        
+        function toggleStaffDropdown() {
+            staffDropdown.classList.toggle('show');
+        }
+        
+        function showSaveStatus(success = true) {
+            if (success) {
+                saveStatus.style.display = 'block';
+                errorStatus.style.display = 'none';
+                
+                setTimeout(() => {
+                    saveStatus.style.display = 'none';
+                }, 2000);
+            } else {
+                errorStatus.style.display = 'block';
+                saveStatus.style.display = 'none';
+                
+                setTimeout(() => {
+                    errorStatus.style.display = 'none';
+                }, 2000);
+            }
+        }
+        
+        function saveWarnings() {
+            const success = CookieUtil.setCookie('playerWarnings', warnings, 30);
+            showSaveStatus(success);
+        }
+        
+        function saveWarnings() {
+    const success = CookieUtil.setCookie('playerWarnings', warnings, 30);
+    showSaveStatus(success);
+}
+
+function addWarning() {
+    const username = usernameInput.value.trim();
+    const reason = reasonInput.value.trim();
+    const staff = staffInput.value;
+    const banned = banCheckbox.checked;
+    
+    if (!username || !reason || !staff) {
+        showSaveStatus(false);
+        return;
+    }
+    
+    // Check if player already exists
+    let player = warnings.find(w => w.username.toLowerCase() === username.toLowerCase());
+    
+    if (!player) {
+        // Create new player entry
+        player = {
+            username: username,
+            banned: banned,
+            warningCount: 0,
+            warnings: []
+        };
+        warnings.push(player);
+    }
+    
+    // Add warning to player
+    const warning = {
+        id: Date.now(),
+        reason: reason,
+        staff: staff,
+        date: new Date().toLocaleString()
+    };
+    
+    player.warnings.push(warning);
+    player.warningCount = player.warnings.length;
+    
+    // Update banned status
+    if (banned) {
+        player.banned = true;
+    }
+    
+    // Save changes
+    saveWarnings();
+    
+    // Reset form
+    usernameInput.value = '';
+    reasonInput.value = '';
+    banCheckbox.checked = false;
+    
+    // Hide form
+    toggleWarningForm();
+    
+    // Refresh warnings list
+    renderWarnings();
+}
+
+function renderWarnings() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const showBanned = showBannedCheckbox.checked;
+    const showActive = showActiveCheckbox.checked;
+    
+    // Filter warnings based on search and filters
+    const filteredWarnings = warnings.filter(player => {
+        // Filter by status (banned or active)
+        if ((player.banned && !showBanned) || (!player.banned && !showActive)) {
+            return false;
+        }
+        
+        // Filter by search term
+        return player.username.toLowerCase().includes(searchTerm);
+    });
+    
+    // Check if we have any warnings
+    if (filteredWarnings.length === 0) {
+        warningsList.innerHTML = '<div class="empty-list">No warnings found for these filters.</div>';
+        return;
+    }
+    
+    // Sort warnings by date (newest first)
+    filteredWarnings.sort((a, b) => {
+        const lastWarningA = a.warnings[a.warnings.length - 1]?.date || '';
+        const lastWarningB = b.warnings[b.warnings.length - 1]?.date || '';
+        return new Date(lastWarningB) - new Date(lastWarningA);
+    });
+    
+    // Generate HTML for warnings
+    warningsList.innerHTML = '';
+    
+    filteredWarnings.forEach(player => {
+        const playerElement = document.createElement('div');
+        playerElement.className = `warning-item ${player.banned ? 'banned' : ''}`;
+        
+        const headerElement = document.createElement('div');
+        headerElement.className = 'warning-header';
+        
+        const titleElement = document.createElement('h3');
+        titleElement.className = 'warning-title';
+        titleElement.textContent = player.username;
+        
+        const countElement = document.createElement('div');
+        countElement.className = 'warning-count';
+        countElement.textContent = `${player.warningCount} Warning${player.warningCount !== 1 ? 's' : ''}`;
+        
+        headerElement.appendChild(titleElement);
+        headerElement.appendChild(countElement);
+        
+        playerElement.appendChild(headerElement);
+        
+        const subtitleElement = document.createElement('div');
+        subtitleElement.className = 'warning-subtitle';
+        subtitleElement.textContent = `Status: ${player.banned ? 'Banned' : 'Active'}`;
+        
+        playerElement.appendChild(subtitleElement);
+        
+        // Sort warnings by date (newest first)
+        const sortedWarnings = [...player.warnings].sort((a, b) => {
+            return new Date(b.date) - new Date(a.date);
+        });
+        
+        // Add warnings
+        sortedWarnings.forEach((warning, index) => {
+            const warningElement = document.createElement('div');
+            warningElement.className = 'warning-detail';
+            
+            const numberElement = document.createElement('div');
+            numberElement.className = 'warning-number';
+            numberElement.textContent = `Warning #${player.warnings.length - index}`;
+            
+            const reasonElement = document.createElement('div');
+            reasonElement.className = 'warning-reason';
+            reasonElement.textContent = warning.reason;
+            
+            const metaElement = document.createElement('div');
+            metaElement.className = 'warning-meta';
+            
+            const staffElement = document.createElement('div');
+            staffElement.className = 'warning-staff';
+            staffElement.textContent = `Issued by: ${warning.staff}`;
+            
+            const dateElement = document.createElement('div');
+            dateElement.className = 'warning-date';
+            dateElement.textContent = warning.date;
+            
+            metaElement.appendChild(staffElement);
+            metaElement.appendChild(dateElement);
+            
+            warningElement.appendChild(numberElement);
+            warningElement.appendChild(reasonElement);
+            warningElement.appendChild(metaElement);
+            
+            playerElement.appendChild(warningElement);
+        });
+        
+        warningsList.appendChild(playerElement);
+    });
+}
+
+function filterWarnings() {
+    renderWarnings();
+}
+
+// Close the staff dropdown when clicking outside of it
+document.addEventListener('click', function(event) {
+    if (!staffInput.contains(event.target) && !staffDropdown.contains(event.target)) {
+        staffDropdown.classList.remove('show');
+    }
+});
+
+// Add some sample data if no warnings exist
+if (warnings.length === 0) {
+    warnings = [
+        {
+            username: "PlayerXYZ",
+            banned: true,
+            warningCount: 3,
+            warnings: [
+                {
+                    id: 1000001,
+                    reason: "Using inappropriate language in chat",
+                    staff: "ModeratorA",
+                    date: "4/14/2025, 10:30:15 AM"
+                },
+                {
+                    id: 1000002,
+                    reason: "Spamming in game chat",
+                    staff: "Helper123",
+                    date: "4/15/2025, 2:45:20 PM"
+                },
+                {
+                    id: 1000003,
+                    reason: "Third violation - Harassment of other players",
+                    staff: "SuperAdmin123",
+                    date: "4/16/2025, 9:15:30 AM"
+                }
+            ]
+        },
+        {
+            username: "CoolGamer42",
+            banned: false,
+            warningCount: 1,
+            warnings: [
+                {
+                    id: 1000004,
+                    reason: "Building inappropriate structures",
+                    staff: "Helper456",
+                    date: "4/15/2025, 5:20:10 PM"
+                }
+            ]
+        }
+    ];
+    
+    saveWarnings();
+}
+
+// Initialize page
+renderWarnings();
