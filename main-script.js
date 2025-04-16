@@ -62,6 +62,9 @@ const warningsList = document.getElementById('warnings-list');
 const saveStatus = document.getElementById('save-status');
 const errorStatus = document.getElementById('error-status');
 
+// Current staff
+let currentStaff = null;
+
 // Theme Management
 function setTheme(isDark) {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -89,8 +92,8 @@ let warnings = JSON.parse(localStorage.getItem('warnings')) || [];
 
 // Authentication check
 function checkAuth() {
-    const currentStaff = CookieUtil.getCookie('currentStaff');
-    if (!currentStaff) {
+    const staffData = CookieUtil.getCookie('currentStaff');
+    if (!staffData) {
         // Not logged in, redirect to login page
         window.location.href = 'index.html';
         return false;
@@ -98,10 +101,18 @@ function checkAuth() {
     
     // Set staff name in dropdown
     if (staffInput) {
-        staffInput.value = currentStaff.name;
+        staffInput.value = staffData.name;
     }
     
-    return currentStaff;
+    // Store the current staff globally
+    currentStaff = staffData;
+    
+    return staffData;
+}
+
+// Check if current user is owner
+function isOwner() {
+    return currentStaff && currentStaff.role === 'owner';
 }
 
 // Handle logout
@@ -208,6 +219,40 @@ function applyWarning() {
     showSuccess('Warning applied successfully.');
 }
 
+// Delete warning
+function deleteWarning(playerIndex, warningIndex) {
+    // Remove the specific warning
+    warnings[playerIndex].warnings.splice(warningIndex, 1);
+    
+    // If player has no warnings left, check if we should remove the player
+    if (warnings[playerIndex].warnings.length === 0) {
+        // Player has no warnings, remove them from the list
+        warnings.splice(playerIndex, 1);
+    }
+    
+    // Save changes
+    saveWarnings();
+    
+    // Re-render the list
+    renderWarnings();
+    
+    showSuccess('Warning deleted successfully.');
+}
+
+// Delete player
+function deletePlayer(playerIndex) {
+    // Remove the player entirely
+    warnings.splice(playerIndex, 1);
+    
+    // Save changes
+    saveWarnings();
+    
+    // Re-render the list
+    renderWarnings();
+    
+    showSuccess('Player removed successfully.');
+}
+
 // Save warnings to localStorage
 function saveWarnings() {
     localStorage.setItem('warnings', JSON.stringify(warnings));
@@ -254,6 +299,15 @@ function filterWarnings() {
     });
 }
 
+// Create delete button (only for owner)
+function createDeleteButton(text, onClick) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-danger delete-btn';
+    deleteBtn.textContent = text;
+    deleteBtn.addEventListener('click', onClick);
+    return deleteBtn;
+}
+
 // Render warnings list
 function renderWarnings() {
     if (!warningsList) return;
@@ -269,7 +323,9 @@ function renderWarnings() {
     
     warningsList.innerHTML = '';
     
-    filteredWarnings.forEach(player => {
+    filteredWarnings.forEach((player, playerIndex) => {
+        const originalPlayerIndex = warnings.findIndex(p => p.username === player.username);
+        
         const warningItem = document.createElement('div');
         warningItem.className = `warning-item ${player.isBanned ? 'banned' : ''}`;
         
@@ -289,6 +345,21 @@ function renderWarnings() {
         header.appendChild(titleDiv);
         header.appendChild(count);
         warningItem.appendChild(header);
+        
+        // Add delete player button if user is owner
+        if (isOwner()) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'actions';
+            
+            const deletePlayerBtn = createDeleteButton('Delete Player', () => {
+                if (confirm(`Are you sure you want to delete all warnings for ${player.username}?`)) {
+                    deletePlayer(originalPlayerIndex);
+                }
+            });
+            
+            actionsDiv.appendChild(deletePlayerBtn);
+            warningItem.appendChild(actionsDiv);
+        }
         
         const subtitle = document.createElement('div');
         subtitle.className = 'warning-subtitle';
@@ -326,6 +397,21 @@ function renderWarnings() {
             detail.appendChild(reason);
             detail.appendChild(meta);
             
+            // Add delete warning button if user is owner
+            if (isOwner()) {
+                const warningActionsDiv = document.createElement('div');
+                warningActionsDiv.className = 'warning-actions';
+                
+                const deleteWarningBtn = createDeleteButton('Delete Warning', () => {
+                    if (confirm('Are you sure you want to delete this warning?')) {
+                        deleteWarning(originalPlayerIndex, idx);
+                    }
+                });
+                
+                warningActionsDiv.appendChild(deleteWarningBtn);
+                detail.appendChild(warningActionsDiv);
+            }
+            
             warningItem.appendChild(detail);
         });
         
@@ -335,8 +421,8 @@ function renderWarnings() {
 
 // Initialize app
 function initApp() {
-    const currentStaff = checkAuth();
-    if (!currentStaff) return;
+    const staffData = checkAuth();
+    if (!staffData) return;
     
     // Set up event listeners
     if (logoutBtn) {
@@ -354,7 +440,7 @@ function initApp() {
     }
     
     if (staffInput) {
-        staffInput.value = currentStaff.name;
+        staffInput.value = staffData.name;
         staffInput.addEventListener('click', toggleStaffDropdown);
     }
     
