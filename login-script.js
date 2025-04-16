@@ -1,7 +1,7 @@
 // Staff members data with login credentials
 const staffMembers = [
     { name: "IAMISFOR", role: "owner", username: "ISFOR", password: "ISFOR@ADMINACCESS" },
-    { name: "HeadMod456", role: "high-support", username: "headmod", password: "mod456" },
+    { name: "enima", role: "high-support", username: "enima", password: "enima7away" },
     { name: "ModeratorA", role: "high-support", username: "modA", password: "modA789" },
     { name: "Helper789", role: "support", username: "helper1", password: "help789" },
     { name: "Helper456", role: "support", username: "helper2", password: "help456" },
