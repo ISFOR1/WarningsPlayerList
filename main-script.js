@@ -1,477 +1,259 @@
-// Cookie utility functions - using same approach as login-script.js
-const CookieUtil = {
-    setCookie(name, value, days) {
-        try {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
-            return true;
-        } catch (error) {
-            console.error("Error setting cookie:", error);
-            return false;
-        }
-    },
-    
-    getCookie(name) {
-        try {
-            const cookieArr = document.cookie.split(";");
-            for (let i = 0; i < cookieArr.length; i++) {
-                const cookiePair = cookieArr[i].split("=");
-                const cookieName = cookiePair[0].trim();
-                if (cookieName === name) {
-                    return JSON.parse(decodeURIComponent(cookiePair[1]));
-                }
-            }
-            return null;
-        } catch (error) {
-            console.error("Error getting cookie:", error);
-            return null;
-        }
-    },
-    
-    deleteCookie(name) {
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-    }
-};
-
-// Staff members data - consistent with login-script.js
+// Staff members data
 const staffMembers = [
     { name: "IAMISFOR", role: "owner" },
-    { name: "HeadMod456", role: "high-support" },
+    { name: "ALI", role: "high-support" },
     { name: "ModeratorA", role: "high-support" },
     { name: "Helper789", role: "support" },
     { name: "Helper456", role: "support" },
     { name: "Helper123", role: "support" }
-];
-
-// DOM Elements
-const logoutBtn = document.getElementById('logout-btn');
-const themeToggle = document.getElementById('theme-toggle');
-const addWarningBtn = document.getElementById('add-warning-btn');
-const warningForm = document.getElementById('warning-form');
-const usernameInput = document.getElementById('username');
-const reasonInput = document.getElementById('reason');
-const staffInput = document.getElementById('staff');
-const staffDropdown = document.getElementById('staff-dropdown');
-const banPlayerCheckbox = document.getElementById('ban-player');
-const applyBtn = document.getElementById('apply-btn');
-const searchPlayer = document.getElementById('search-player');
-const showBanned = document.getElementById('show-banned');
-const showActive = document.getElementById('show-active');
-const warningsList = document.getElementById('warnings-list');
-const saveStatus = document.getElementById('save-status');
-const errorStatus = document.getElementById('error-status');
-
-// Current staff
-let currentStaff = null;
-
-// Theme Management
-function setTheme(isDark) {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('dark-theme', isDark);
-}
-
-// Check for saved theme preference or use user preference
-const savedTheme = localStorage.getItem('dark-theme');
-const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-if (savedTheme !== null) {
-    if (themeToggle) {
-        themeToggle.checked = savedTheme === 'true';
-    }
-    setTheme(savedTheme === 'true');
-} else {
-    if (themeToggle) {
-        themeToggle.checked = prefersDark;
-    }
-    setTheme(prefersDark);
-}
-
-// Warnings data - initialize from localStorage or set default
-let warnings = JSON.parse(localStorage.getItem('warnings')) || [];
-
-// Authentication check
-function checkAuth() {
-    const staffData = CookieUtil.getCookie('currentStaff');
-    if (!staffData) {
-        // Not logged in, redirect to login page
-        window.location.href = 'index.html';
+  ];
+  
+  // Cookie utility functions
+  const CookieUtil = {
+    setCookie(name, value, days) {
+      try {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+        return true;
+      } catch (error) {
+        console.error("Error setting cookie:", error);
         return false;
-    }
+      }
+    },
     
-    // Set staff name in dropdown
-    if (staffInput) {
-        staffInput.value = staffData.name;
-    }
-    
-    // Store the current staff globally
-    currentStaff = staffData;
-    
-    return staffData;
-}
-
-// Check if current user is owner
-function isOwner() {
-    return currentStaff && currentStaff.role === 'owner';
-}
-
-// Handle logout
-function handleLogout() {
-    CookieUtil.deleteCookie('currentStaff');
-    window.location.href = 'index.html';
-}
-
-// Toggle warning form
-function toggleWarningForm() {
-    if (warningForm) {
-        warningForm.style.display = warningForm.style.display === 'none' ? 'block' : 'none';
-    }
-}
-
-// Populate staff dropdown
-function populateStaffDropdown() {
-    if (!staffDropdown) return;
-    
-    staffDropdown.innerHTML = '';
-    
-    staffMembers.forEach(staff => {
-        const staffItem = document.createElement('div');
-        staffItem.className = 'staff-item';
-        staffItem.dataset.name = staff.name;
+    getCookie(name) {
+      try {
+        const cookieName = `${name}=`;
+        const cookies = document.cookie.split(';');
         
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = staff.name;
-        
-        const roleSpan = document.createElement('span');
-        roleSpan.className = `staff-role role-${staff.role}`;
-        roleSpan.textContent = staff.role;
-        
-        staffItem.appendChild(nameSpan);
-        staffItem.appendChild(roleSpan);
-        
-        staffItem.addEventListener('click', () => {
-            staffInput.value = staff.name;
-            staffDropdown.classList.remove('show');
-        });
-        
-        staffDropdown.appendChild(staffItem);
-    });
-}
-
-// Toggle staff dropdown
-function toggleStaffDropdown() {
-    if (staffDropdown) {
-        staffDropdown.classList.toggle('show');
+        for (let i = 0; i < cookies.length; i++) {
+          let cookie = cookies[i].trim();
+          if (cookie.indexOf(cookieName) === 0) {
+            return cookie.substring(cookieName.length, cookie.length);
+          }
+        }
+        return null;
+      } catch (error) {
+        console.error("Error getting cookie:", error);
+        return null;
+      }
+    },
+    
+    deleteCookie(name) {
+      try {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        return true;
+      } catch (error) {
+        console.error("Error deleting cookie:", error);
+        return false;
+      }
     }
-}
-
-// Apply warning
-function applyWarning() {
-    const username = usernameInput ? usernameInput.value.trim() : '';
-    const reason = reasonInput ? reasonInput.value.trim() : '';
-    const staff = staffInput ? staffInput.value.trim() : '';
-    const isBanned = banPlayerCheckbox ? banPlayerCheckbox.checked : false;
+  };
+  
+  // Staff verification functions
+  const StaffVerifier = {
+    isStaff(username) {
+      return staffMembers.some(member => member.name === username);
+    },
     
-    if (!username || !reason || !staff) {
-        showError('Please fill all required fields.');
-        return;
+    getStaffRole(username) {
+      const member = staffMembers.find(member => member.name === username);
+      return member ? member.role : null;
+    },
+    
+    hasPermission(username, requiredRole) {
+      const member = staffMembers.find(member => member.name === username);
+      if (!member) return false;
+      
+      switch (requiredRole) {
+        case "support":
+          return ["support", "high-support", "owner"].includes(member.role);
+        case "high-support":
+          return ["high-support", "owner"].includes(member.role);
+        case "owner":
+          return member.role === "owner";
+        default:
+          return false;
+      }
     }
+  };
+  
+  // Authentication functions
+  const Auth = {
+    currentUser: null,
     
-    // Find existing player or create new one
-    let player = warnings.find(w => w.username.toLowerCase() === username.toLowerCase());
-    
-    if (!player) {
-        player = {
-            username: username,
-            warnings: [],
-            isBanned: false
+    login(username, password) {
+      // This would typically involve API calls to verify credentials
+      // For demonstration purposes, we'll just check if the user is a staff member
+      if (StaffVerifier.isStaff(username)) {
+        this.currentUser = {
+          username,
+          role: StaffVerifier.getStaffRole(username),
+          loginTime: new Date()
         };
-        warnings.push(player);
-    }
-    
-    // Add new warning
-    const warning = {
-        id: Date.now(),
-        reason: reason,
-        staff: staff,
-        date: new Date().toISOString()
-    };
-    
-    player.warnings.push(warning);
-    
-    // Update banned status
-    if (isBanned) {
-        player.isBanned = true;
-    }
-    
-    // Save to localStorage
-    saveWarnings();
-    
-    // Clear form and hide
-    if (usernameInput) usernameInput.value = '';
-    if (reasonInput) reasonInput.value = '';
-    if (banPlayerCheckbox) banPlayerCheckbox.checked = false;
-    if (warningForm) warningForm.style.display = 'none';
-    
-    // Refresh warnings list
-    renderWarnings();
-    
-    showSuccess('Warning applied successfully.');
-}
-
-// Delete warning
-function deleteWarning(playerIndex, warningIndex) {
-    // Remove the specific warning
-    warnings[playerIndex].warnings.splice(warningIndex, 1);
-    
-    // If player has no warnings left, check if we should remove the player
-    if (warnings[playerIndex].warnings.length === 0) {
-        // Player has no warnings, remove them from the list
-        warnings.splice(playerIndex, 1);
-    }
-    
-    // Save changes
-    saveWarnings();
-    
-    // Re-render the list
-    renderWarnings();
-    
-    showSuccess('Warning deleted successfully.');
-}
-
-// Delete player
-function deletePlayer(playerIndex) {
-    // Remove the player entirely
-    warnings.splice(playerIndex, 1);
-    
-    // Save changes
-    saveWarnings();
-    
-    // Re-render the list
-    renderWarnings();
-    
-    showSuccess('Player removed successfully.');
-}
-
-// Save warnings to localStorage
-function saveWarnings() {
-    localStorage.setItem('warnings', JSON.stringify(warnings));
-}
-
-// Show success message
-function showSuccess(message) {
-    if (saveStatus) {
-        saveStatus.textContent = message;
-        saveStatus.style.display = 'block';
         
-        setTimeout(() => {
-            saveStatus.style.display = 'none';
-        }, 3000);
+        // Save user session in cookie
+        CookieUtil.setCookie("currentUser", JSON.stringify(this.currentUser), 1);
+        return true;
+      }
+      return false;
+    },
+    
+    logout() {
+      this.currentUser = null;
+      CookieUtil.deleteCookie("currentUser");
+      return true;
+    },
+    
+    checkAuth() {
+      if (this.currentUser) return true;
+      
+      const savedUser = CookieUtil.getCookie("currentUser");
+      if (savedUser) {
+        try {
+          this.currentUser = JSON.parse(savedUser);
+          return true;
+        } catch (e) {
+          console.error("Error parsing saved user:", e);
+          CookieUtil.deleteCookie("currentUser");
+        }
+      }
+      return false;
     }
-}
-
-// Show error message
-function showError(message) {
-    if (errorStatus) {
-        errorStatus.textContent = message;
-        errorStatus.style.display = 'block';
-        
-        setTimeout(() => {
-            errorStatus.style.display = 'none';
-        }, 3000);
+  };
+  
+  // Application initialization
+  function initApp() {
+    // Check if user is already logged in
+    if (Auth.checkAuth()) {
+      showDashboard();
+    } else {
+      showLoginScreen();
     }
-}
-
-// Filter warnings
-function filterWarnings() {
-    const searchTerm = searchPlayer ? searchPlayer.value.toLowerCase() : '';
-    const includeBanned = showBanned ? showBanned.checked : true;
-    const includeActive = showActive ? showActive.checked : true;
     
-    return warnings.filter(player => {
-        // Filter by search term
-        const matchesSearch = player.username.toLowerCase().includes(searchTerm);
-        
-        // Filter by status
-        const matchesStatus = (player.isBanned && includeBanned) || (!player.isBanned && includeActive);
-        
-        return matchesSearch && matchesStatus;
-    });
-}
-
-// Create delete button (only for owner)
-function createDeleteButton(text, onClick) {
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn btn-danger delete-btn';
-    deleteBtn.textContent = text;
-    deleteBtn.addEventListener('click', onClick);
-    return deleteBtn;
-}
-
-// Render warnings list
-function renderWarnings() {
-    if (!warningsList) return;
+    // Add event listeners
+    document.getElementById("loginForm")?.addEventListener("submit", handleLogin);
+    document.getElementById("logoutButton")?.addEventListener("click", handleLogout);
+  }
+  
+  // Event handlers
+  function handleLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
     
-    const filteredWarnings = filterWarnings();
+    if (Auth.login(username, password)) {
+      showDashboard();
+    } else {
+      showError("Invalid username or password");
+    }
+  }
+  
+  function handleLogout() {
+    Auth.logout();
+    showLoginScreen();
+  }
+  
+  // UI functions
+  function showLoginScreen() {
+    const mainContent = document.getElementById("mainContent");
+    if (!mainContent) return;
     
-    if (filteredWarnings.length === 0) {
-        warningsList.innerHTML = `
-            <div class="empty-list">No warnings found. Add your first warning using the button above.</div>
+    mainContent.innerHTML = `
+      <div class="login-container">
+        <h2>Staff Login</h2>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" required>
+          </div>
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    `;
+  }
+  
+  function showDashboard() {
+    if (!Auth.currentUser) {
+      showLoginScreen();
+      return;
+    }
+    
+    const mainContent = document.getElementById("mainContent");
+    if (!mainContent) return;
+    
+    mainContent.innerHTML = `
+      <div class="dashboard">
+        <header>
+          <h2>Welcome, ${Auth.currentUser.username}</h2>
+          <span class="role-badge ${Auth.currentUser.role}">${Auth.currentUser.role}</span>
+          <button id="logoutButton">Logout</button>
+        </header>
+        <div class="dashboard-content">
+          ${getDashboardContentByRole(Auth.currentUser.role)}
+        </div>
+      </div>
+    `;
+  }
+  
+  function getDashboardContentByRole(role) {
+    switch (role) {
+      case "owner":
+        return `
+          <div class="panel">
+            <h3>Admin Panel</h3>
+            <ul class="admin-options">
+              <li><button class="admin-btn">Manage Staff</button></li>
+              <li><button class="admin-btn">View Logs</button></li>
+              <li><button class="admin-btn">System Settings</button></li>
+            </ul>
+          </div>
         `;
-        return;
+      case "high-support":
+        return `
+          <div class="panel">
+            <h3>Moderation Tools</h3>
+            <ul class="mod-options">
+              <li><button class="mod-btn">User Management</button></li>
+              <li><button class="mod-btn">Content Review</button></li>
+              <li><button class="mod-btn">Support Tickets</button></li>
+            </ul>
+          </div>
+        `;
+      case "support":
+        return `
+          <div class="panel">
+            <h3>Support Tools</h3>
+            <ul class="support-options">
+              <li><button class="support-btn">View Tickets</button></li>
+              <li><button class="support-btn">User Lookup</button></li>
+            </ul>
+          </div>
+        `;
+      default:
+        return `<p>No dashboard content available for your role.</p>`;
     }
-    
-    warningsList.innerHTML = '';
-    
-    filteredWarnings.forEach((player, playerIndex) => {
-        const originalPlayerIndex = warnings.findIndex(p => p.username === player.username);
-        
-        const warningItem = document.createElement('div');
-        warningItem.className = `warning-item ${player.isBanned ? 'banned' : ''}`;
-        
-        const header = document.createElement('div');
-        header.className = 'warning-header';
-        
-        const titleDiv = document.createElement('div');
-        const title = document.createElement('h3');
-        title.className = 'warning-title';
-        title.textContent = player.username;
-        titleDiv.appendChild(title);
-        
-        const count = document.createElement('div');
-        count.className = 'warning-count';
-        count.textContent = `${player.warnings.length} Warning${player.warnings.length !== 1 ? 's' : ''}`;
-        
-        header.appendChild(titleDiv);
-        header.appendChild(count);
-        warningItem.appendChild(header);
-        
-        // Add delete player button if user is owner
-        if (isOwner()) {
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'actions';
-            
-            const deletePlayerBtn = createDeleteButton('Delete Player', () => {
-                if (confirm(`Are you sure you want to delete all warnings for ${player.username}?`)) {
-                    deletePlayer(originalPlayerIndex);
-                }
-            });
-            
-            actionsDiv.appendChild(deletePlayerBtn);
-            warningItem.appendChild(actionsDiv);
-        }
-        
-        const subtitle = document.createElement('div');
-        subtitle.className = 'warning-subtitle';
-        subtitle.textContent = player.isBanned ? 'This player has been banned' : 'This player is active';
-        warningItem.appendChild(subtitle);
-        
-        // Add warnings
-        player.warnings.forEach((warning, idx) => {
-            const detail = document.createElement('div');
-            detail.className = 'warning-detail';
-            
-            const number = document.createElement('div');
-            number.className = 'warning-number';
-            number.textContent = `Warning #${idx + 1}`;
-            
-            const reason = document.createElement('div');
-            reason.className = 'warning-reason';
-            reason.textContent = warning.reason;
-            
-            const meta = document.createElement('div');
-            meta.className = 'warning-meta';
-            
-            const staff = document.createElement('div');
-            staff.className = 'warning-staff';
-            staff.textContent = `Issued by: ${warning.staff}`;
-            
-            const date = document.createElement('div');
-            date.className = 'warning-date';
-            date.textContent = new Date(warning.date).toLocaleString();
-            
-            meta.appendChild(staff);
-            meta.appendChild(date);
-            
-            detail.appendChild(number);
-            detail.appendChild(reason);
-            detail.appendChild(meta);
-            
-            // Add delete warning button if user is owner
-            if (isOwner()) {
-                const warningActionsDiv = document.createElement('div');
-                warningActionsDiv.className = 'warning-actions';
-                
-                const deleteWarningBtn = createDeleteButton('Delete Warning', () => {
-                    if (confirm('Are you sure you want to delete this warning?')) {
-                        deleteWarning(originalPlayerIndex, idx);
-                    }
-                });
-                
-                warningActionsDiv.appendChild(deleteWarningBtn);
-                detail.appendChild(warningActionsDiv);
-            }
-            
-            warningItem.appendChild(detail);
-        });
-        
-        warningsList.appendChild(warningItem);
-    });
-}
-
-// Initialize app
-function initApp() {
-    const staffData = checkAuth();
-    if (!staffData) return;
-    
-    // Set up event listeners
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
+  }
+  
+  function showError(message) {
+    const errorDiv = document.getElementById("errorMessage");
+    if (errorDiv) {
+      errorDiv.textContent = message;
+      errorDiv.style.display = "block";
+      
+      // Hide error after 3 seconds
+      setTimeout(() => {
+        errorDiv.style.display = "none";
+      }, 3000);
+    } else {
+      alert(message);
     }
-    
-    if (themeToggle) {
-        themeToggle.addEventListener('change', (e) => {
-            setTheme(e.target.checked);
-        });
-    }
-    
-    if (addWarningBtn) {
-        addWarningBtn.addEventListener('click', toggleWarningForm);
-    }
-    
-    if (staffInput) {
-        staffInput.value = staffData.name;
-        staffInput.addEventListener('click', toggleStaffDropdown);
-    }
-    
-    if (applyBtn) {
-        applyBtn.addEventListener('click', applyWarning);
-    }
-    
-    // Search and filter listeners
-    if (searchPlayer) {
-        searchPlayer.addEventListener('input', renderWarnings);
-    }
-    
-    if (showBanned) {
-        showBanned.addEventListener('change', renderWarnings);
-    }
-    
-    if (showActive) {
-        showActive.addEventListener('change', renderWarnings);
-    }
-    
-    // Initialize UI
-    populateStaffDropdown();
-    renderWarnings();
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (staffDropdown && staffInput && !staffInput.contains(e.target) && !staffDropdown.contains(e.target)) {
-            staffDropdown.classList.remove('show');
-        }
-    });
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initApp);
+  }
+  
+  // Initialize app when DOM is fully loaded
+  document.addEventListener("DOMContentLoaded", initApp);
