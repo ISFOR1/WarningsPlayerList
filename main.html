@@ -5,10 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Player Warnings System</title>
     <link rel="stylesheet" href="main-styles.css">
-    <!-- Firebase App (the core Firebase SDK) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
-    <!-- Add Firebase products that you want to use -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
+<!-- Add Firebase products that you want to use -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
+<!-- Add connectivity detection -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-auth-compat.min.js"></script>
+
+<!-- Add this right before the closing </body> tag -->
+<script>
+  // Connection status monitor
+  window.addEventListener('online', function() {
+    document.getElementById('save-status').textContent = "Connection restored!";
+    document.getElementById('save-status').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('save-status').style.display = 'none';
+    }, 3000);
+    
+    // Reload warnings when connection is restored
+    if (typeof loadWarnings === 'function') {
+      loadWarnings();
+    }
+  });
+  
+  window.addEventListener('offline', function() {
+    document.getElementById('error-status').textContent = "You are offline. Changes will not be saved.";
+    document.getElementById('error-status').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('error-status').style.display = 'none';
+    }, 5000);
+  });
+</script>
 </head>
 <body>
     <div class="container">
