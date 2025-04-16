@@ -1,269 +1,15 @@
-// Cookie utility functions - using same approach as login-script.js
-const CookieUtil = {
-    setCookie(name, value, days) {
-        try {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
-            return true;
-        } catch (error) {
-            console.error("Error setting cookie:", error);
-            return false;
-        }
-    },
-    
-    getCookie(name) {
-        try {
-            const cookieArr = document.cookie.split(";");
-            for (let i = 0; i < cookieArr.length; i++) {
-                const cookiePair = cookieArr[i].split("=");
-                const cookieName = cookiePair[0].trim();
-                if (cookieName === name) {
-                    return JSON.parse(decodeURIComponent(cookiePair[1]));
-                }
-            }
-            return null;
-        } catch (error) {
-            console.error("Error getting cookie:", error);
-            return null;
-        }
-    },
-    
-    deleteCookie(name) {
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-    }
-};
-
-// Staff members data - consistent with login-script.js
-const staffMembers = [
-    { name: "ROBLOX", role: "owner" },
-    { name: "IAMISFOR", role: "high-support" },
-    { name: "ModeratorA", role: "high-support" },
-    { name: "Helper789", role: "support" },
-    { name: "Helper456", role: "support" },
-    { name: "Helper123", role: "support" }
-];
-
-// DOM Elements
-const logoutBtn = document.getElementById('logout-btn');
-const themeToggle = document.getElementById('theme-toggle');
-const addWarningBtn = document.getElementById('add-warning-btn');
-const warningForm = document.getElementById('warning-form');
-const usernameInput = document.getElementById('username');
-const reasonInput = document.getElementById('reason');
-const staffInput = document.getElementById('staff');
-const staffDropdown = document.getElementById('staff-dropdown');
-const banPlayerCheckbox = document.getElementById('ban-player');
-const applyBtn = document.getElementById('apply-btn');
-const searchPlayer = document.getElementById('search-player');
-const showBanned = document.getElementById('show-banned');
-const showActive = document.getElementById('show-active');
-const warningsList = document.getElementById('warnings-list');
-const saveStatus = document.getElementById('save-status');
-const errorStatus = document.getElementById('error-status');
-
-// Current staff
-let currentStaff = null;
-
-// Theme Management
-function setTheme(isDark) {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('dark-theme', isDark);
-}
-
-// Check for saved theme preference or use user preference
-const savedTheme = localStorage.getItem('dark-theme');
-const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-if (savedTheme !== null) {
-    if (themeToggle) {
-        themeToggle.checked = savedTheme === 'true';
-    }
-    setTheme(savedTheme === 'true');
-} else {
-    if (themeToggle) {
-        themeToggle.checked = prefersDark;
-    }
-    setTheme(prefersDark);
-}
-
-// Warnings data - initialize from localStorage or set default
-let warnings = JSON.parse(localStorage.getItem('warnings')) || [];
-
-// Authentication check
-function checkAuth() {
-    const staffData = CookieUtil.getCookie('currentStaff');
-    if (!staffData) {
-        // Not logged in, redirect to login page
-        window.location.href = 'index.html';
-        return false;
-    }
-    
-    // Set staff name in dropdown
-    if (staffInput) {
-        staffInput.value = staffData.name;
-    }
-    
-    // Store the current staff globally
-    currentStaff = staffData;
-    
-    return staffData;
-}
-
-// Check if current user is owner
-function isOwner() {
-    return currentStaff && currentStaff.role === 'owner';
-}
-
-// Handle logout
-function handleLogout() {
-    CookieUtil.deleteCookie('currentStaff');
-    window.location.href = 'index.html';
-}
-
-// Toggle warning form
-function toggleWarningForm() {
-    if (warningForm) {
-        warningForm.style.display = warningForm.style.display === 'none' ? 'block' : 'none';
-    }
-}
-
-// Populate staff dropdown
-function populateStaffDropdown() {
-    if (!staffDropdown) return;
-    
-    staffDropdown.innerHTML = '';
-    
-    staffMembers.forEach(staff => {
-        const staffItem = document.createElement('div');
-        staffItem.className = 'staff-item';
-        staffItem.dataset.name = staff.name;
-        
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = staff.name;
-        
-        const roleSpan = document.createElement('span');
-        roleSpan.className = `staff-role role-${staff.role}`;
-        roleSpan.textContent = staff.role;
-        
-        staffItem.appendChild(nameSpan);
-        staffItem.appendChild(roleSpan);
-        
-        staffItem.addEventListener('click', () => {
-            staffInput.value = staff.name;
-            staffDropdown.classList.remove('show');
-        });
-        
-        staffDropdown.appendChild(staffItem);
-    });
-}
-
-// Toggle staff dropdown
+// Toggle staff dropdown visibility
 function toggleStaffDropdown() {
     if (staffDropdown) {
         staffDropdown.classList.toggle('show');
     }
 }
 
-// Apply warning
-function applyWarning() {
-    const username = usernameInput ? usernameInput.value.trim() : '';
-    const reason = reasonInput ? reasonInput.value.trim() : '';
-    const staff = staffInput ? staffInput.value.trim() : '';
-    const isBanned = banPlayerCheckbox ? banPlayerCheckbox.checked : false;
-    
-    if (!username || !reason || !staff) {
-        showError('Please fill all required fields.');
-        return;
-    }
-    
-    // Find existing player or create new one
-    let player = warnings.find(w => w.username.toLowerCase() === username.toLowerCase());
-    
-    if (!player) {
-        player = {
-            username: username,
-            warnings: [],
-            isBanned: false
-        };
-        warnings.push(player);
-    }
-    
-    // Add new warning
-    const warning = {
-        id: Date.now(),
-        reason: reason,
-        staff: staff,
-        date: new Date().toISOString()
-    };
-    
-    player.warnings.push(warning);
-    
-    // Update banned status
-    if (isBanned) {
-        player.isBanned = true;
-    }
-    
-    // Save to localStorage
-    saveWarnings();
-    
-    // Clear form and hide
-    if (usernameInput) usernameInput.value = '';
-    if (reasonInput) reasonInput.value = '';
-    if (banPlayerCheckbox) banPlayerCheckbox.checked = false;
-    if (warningForm) warningForm.style.display = 'none';
-    
-    // Refresh warnings list
-    renderWarnings();
-    
-    showSuccess('Warning applied successfully.');
-}
-
-// Delete warning
-function deleteWarning(playerIndex, warningIndex) {
-    // Remove the specific warning
-    warnings[playerIndex].warnings.splice(warningIndex, 1);
-    
-    // If player has no warnings left, check if we should remove the player
-    if (warnings[playerIndex].warnings.length === 0) {
-        // Player has no warnings, remove them from the list
-        warnings.splice(playerIndex, 1);
-    }
-    
-    // Save changes
-    saveWarnings();
-    
-    // Re-render the list
-    renderWarnings();
-    
-    showSuccess('Warning deleted successfully.');
-}
-
-// Delete player
-function deletePlayer(playerIndex) {
-    // Remove the player entirely
-    warnings.splice(playerIndex, 1);
-    
-    // Save changes
-    saveWarnings();
-    
-    // Re-render the list
-    renderWarnings();
-    
-    showSuccess('Player removed successfully.');
-}
-
-// Save warnings to localStorage
-function saveWarnings() {
-    localStorage.setItem('warnings', JSON.stringify(warnings));
-}
-
-// Show success message
-function showSuccess(message) {
+// Show status message
+function showStatus(message) {
     if (saveStatus) {
         saveStatus.textContent = message;
         saveStatus.style.display = 'block';
-        
         setTimeout(() => {
             saveStatus.style.display = 'none';
         }, 3000);
@@ -275,180 +21,240 @@ function showError(message) {
     if (errorStatus) {
         errorStatus.textContent = message;
         errorStatus.style.display = 'block';
-        
         setTimeout(() => {
             errorStatus.style.display = 'none';
-        }, 3000);
+        }, 5000);
     }
 }
 
-// Filter warnings
-function filterWarnings() {
-    const searchTerm = searchPlayer ? searchPlayer.value.toLowerCase() : '';
-    const includeBanned = showBanned ? showBanned.checked : true;
-    const includeActive = showActive ? showActive.checked : true;
+// Add new warning
+function addWarning(event) {
+    event.preventDefault();
     
-    return warnings.filter(player => {
-        // Filter by search term
-        const matchesSearch = player.username.toLowerCase().includes(searchTerm);
-        
-        // Filter by status
-        const matchesStatus = (player.isBanned && includeBanned) || (!player.isBanned && includeActive);
-        
-        return matchesSearch && matchesStatus;
-    });
+    const username = usernameInput.value.trim();
+    const reason = reasonInput.value.trim();
+    const staff = staffInput.value.trim();
+    const isBanned = banPlayerCheckbox.checked;
+    
+    if (!username || !reason || !staff) {
+        showError("Please fill all required fields.");
+        return;
+    }
+    
+    showLoading();
+    
+    const timestamp = new Date().toISOString();
+    const warningId = `warning_${Date.now()}`;
+    
+    const newWarning = {
+        id: warningId,
+        username: username,
+        reason: reason,
+        staff: staff,
+        timestamp: timestamp,
+        banned: isBanned
+    };
+    
+    // Save to Firebase
+    warningsRef.child(warningId).set(newWarning)
+        .then(() => {
+            // Add to local array
+            warnings.push(newWarning);
+            
+            // Clear form fields
+            usernameInput.value = '';
+            reasonInput.value = '';
+            banPlayerCheckbox.checked = false;
+            
+            // Update UI
+            renderWarnings();
+            showStatus("Warning added successfully!");
+            hideLoading();
+            
+            // Hide form
+            toggleWarningForm();
+        })
+        .catch(error => {
+            console.error("Error adding warning:", error);
+            showError("Failed to save warning to the server.");
+            hideLoading();
+        });
 }
 
-// Create delete button (only for owner)
-function createDeleteButton(text, onClick) {
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn btn-danger delete-btn';
-    deleteBtn.textContent = text;
-    deleteBtn.addEventListener('click', onClick);
-    return deleteBtn;
+// Delete warning
+function deleteWarning(warningId) {
+    if (!isOwner()) {
+        showError("Only the owner can delete warnings.");
+        return;
+    }
+    
+    if (confirm("Are you sure you want to delete this warning?")) {
+        showLoading();
+        
+        warningsRef.child(warningId).remove()
+            .then(() => {
+                warnings = warnings.filter(warning => warning.id !== warningId);
+                renderWarnings();
+                showStatus("Warning deleted successfully!");
+                hideLoading();
+            })
+            .catch(error => {
+                console.error("Error deleting warning:", error);
+                showError("Failed to delete warning from the server.");
+                hideLoading();
+            });
+    }
+}
+
+// Format date from ISO string
+function formatDate(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 
 // Render warnings list
 function renderWarnings() {
     if (!warningsList) return;
     
-    const filteredWarnings = filterWarnings();
+    // Filter warnings based on search and filters
+    let filteredWarnings = [...warnings];
     
-    if (filteredWarnings.length === 0) {
-        warningsList.innerHTML = `
-            <div class="empty-list">No warnings found. Add your first warning using the button above.</div>
-        `;
-        return;
+    // Apply search filter
+    if (searchPlayer && searchPlayer.value.trim()) {
+        const searchTerm = searchPlayer.value.trim().toLowerCase();
+        filteredWarnings = filteredWarnings.filter(warning => 
+            warning.username.toLowerCase().includes(searchTerm)
+        );
     }
     
+    // Apply banned/active filters
+    if (showBanned && showBanned.checked && !showActive.checked) {
+        filteredWarnings = filteredWarnings.filter(warning => warning.banned);
+    } else if (showActive && showActive.checked && !showBanned.checked) {
+        filteredWarnings = filteredWarnings.filter(warning => !warning.banned);
+    }
+    
+    // Sort warnings by timestamp (newest first)
+    filteredWarnings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Clear current list
     warningsList.innerHTML = '';
     
-    filteredWarnings.forEach((player, playerIndex) => {
-        const originalPlayerIndex = warnings.findIndex(p => p.username === player.username);
-        
+    // Render each warning
+    filteredWarnings.forEach(warning => {
         const warningItem = document.createElement('div');
-        warningItem.className = `warning-item ${player.isBanned ? 'banned' : ''}`;
+        warningItem.className = `warning-item ${warning.banned ? 'banned' : ''}`;
+        warningItem.dataset.id = warning.id;
         
-        const header = document.createElement('div');
-        header.className = 'warning-header';
+        const warningHeader = document.createElement('div');
+        warningHeader.className = 'warning-header';
         
-        const titleDiv = document.createElement('div');
-        const title = document.createElement('h3');
-        title.className = 'warning-title';
-        title.textContent = player.username;
-        titleDiv.appendChild(title);
+        const username = document.createElement('h3');
+        username.textContent = warning.username;
         
-        const count = document.createElement('div');
-        count.className = 'warning-count';
-        count.textContent = `${player.warnings.length} Warning${player.warnings.length !== 1 ? 's' : ''}`;
+        const status = document.createElement('span');
+        status.className = 'status';
+        status.textContent = warning.banned ? 'BANNED' : 'WARNING';
         
-        header.appendChild(titleDiv);
-        header.appendChild(count);
-        warningItem.appendChild(header);
+        warningHeader.appendChild(username);
+        warningHeader.appendChild(status);
         
-        // Add delete player button if user is owner
+        const warningContent = document.createElement('div');
+        warningContent.className = 'warning-content';
+        
+        const reason = document.createElement('p');
+        reason.textContent = warning.reason;
+        
+        const meta = document.createElement('div');
+        meta.className = 'warning-meta';
+        meta.innerHTML = `<span>By: ${warning.staff}</span><span>Date: ${formatDate(warning.timestamp)}</span>`;
+        
+        warningContent.appendChild(reason);
+        warningContent.appendChild(meta);
+        
+        warningItem.appendChild(warningHeader);
+        warningItem.appendChild(warningContent);
+        
+        // Add delete button for owner
         if (isOwner()) {
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'actions';
-            
-            const deletePlayerBtn = createDeleteButton('Delete Player', () => {
-                if (confirm(`Are you sure you want to delete all warnings for ${player.username}?`)) {
-                    deletePlayer(originalPlayerIndex);
-                }
-            });
-            
-            actionsDiv.appendChild(deletePlayerBtn);
-            warningItem.appendChild(actionsDiv);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', () => deleteWarning(warning.id));
+            warningItem.appendChild(deleteBtn);
         }
         
-        const subtitle = document.createElement('div');
-        subtitle.className = 'warning-subtitle';
-        subtitle.textContent = player.isBanned ? 'This player has been banned' : 'This player is active';
-        warningItem.appendChild(subtitle);
-        
-        // Add warnings
-        player.warnings.forEach((warning, idx) => {
-            const detail = document.createElement('div');
-            detail.className = 'warning-detail';
-            
-            const number = document.createElement('div');
-            number.className = 'warning-number';
-            number.textContent = `Warning #${idx + 1}`;
-            
-            const reason = document.createElement('div');
-            reason.className = 'warning-reason';
-            reason.textContent = warning.reason;
-            
-            const meta = document.createElement('div');
-            meta.className = 'warning-meta';
-            
-            const staff = document.createElement('div');
-            staff.className = 'warning-staff';
-            staff.textContent = `Issued by: ${warning.staff}`;
-            
-            const date = document.createElement('div');
-            date.className = 'warning-date';
-            date.textContent = new Date(warning.date).toLocaleString();
-            
-            meta.appendChild(staff);
-            meta.appendChild(date);
-            
-            detail.appendChild(number);
-            detail.appendChild(reason);
-            detail.appendChild(meta);
-            
-            // Add delete warning button if user is owner
-            if (isOwner()) {
-                const warningActionsDiv = document.createElement('div');
-                warningActionsDiv.className = 'warning-actions';
-                
-                const deleteWarningBtn = createDeleteButton('Delete Warning', () => {
-                    if (confirm('Are you sure you want to delete this warning?')) {
-                        deleteWarning(originalPlayerIndex, idx);
-                    }
-                });
-                
-                warningActionsDiv.appendChild(deleteWarningBtn);
-                detail.appendChild(warningActionsDiv);
-            }
-            
-            warningItem.appendChild(detail);
-        });
-        
         warningsList.appendChild(warningItem);
+    });
+    
+    // Show message if no warnings
+    if (filteredWarnings.length === 0) {
+        const noWarnings = document.createElement('p');
+        noWarnings.className = 'no-warnings';
+        noWarnings.textContent = 'No warnings found.';
+        warningsList.appendChild(noWarnings);
+    }
+}
+
+// Set up real-time updates from Firebase
+function setupRealTimeUpdates() {
+    // Listen for added warnings
+    warningsRef.on('child_added', snapshot => {
+        const newWarning = snapshot.val();
+        // Only add if not already in the array
+        if (!warnings.some(w => w.id === newWarning.id)) {
+            warnings.push(newWarning);
+            renderWarnings();
+        }
+    });
+    
+    // Listen for removed warnings
+    warningsRef.on('child_removed', snapshot => {
+        const removedId = snapshot.val().id;
+        warnings = warnings.filter(w => w.id !== removedId);
+        renderWarnings();
+    });
+    
+    // Listen for changed warnings
+    warningsRef.on('child_changed', snapshot => {
+        const changedWarning = snapshot.val();
+        const index = warnings.findIndex(w => w.id === changedWarning.id);
+        if (index !== -1) {
+            warnings[index] = changedWarning;
+            renderWarnings();
+        }
     });
 }
 
 // Initialize app
-function initApp() {
-    const staffData = checkAuth();
-    if (!staffData) return;
+function init() {
+    // Check if user is authenticated
+    const staff = checkAuth();
+    if (!staff) return;
     
     // Set up event listeners
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
+    if (themeToggle) {
+        themeToggle.addEventListener('change', () => setTheme(themeToggle.checked));
     }
     
-    if (themeToggle) {
-        themeToggle.addEventListener('change', (e) => {
-            setTheme(e.target.checked);
-        });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
     }
     
     if (addWarningBtn) {
         addWarningBtn.addEventListener('click', toggleWarningForm);
     }
     
+    if (warningForm) {
+        warningForm.addEventListener('submit', addWarning);
+    }
+    
     if (staffInput) {
-        staffInput.value = staffData.name;
         staffInput.addEventListener('click', toggleStaffDropdown);
+        populateStaffDropdown();
     }
     
-    if (applyBtn) {
-        applyBtn.addEventListener('click', applyWarning);
-    }
-    
-    // Search and filter listeners
+    // Filter event listeners
     if (searchPlayer) {
         searchPlayer.addEventListener('input', renderWarnings);
     }
@@ -461,17 +267,19 @@ function initApp() {
         showActive.addEventListener('change', renderWarnings);
     }
     
-    // Initialize UI
-    populateStaffDropdown();
-    renderWarnings();
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (staffDropdown && staffInput && !staffInput.contains(e.target) && !staffDropdown.contains(e.target)) {
+    // Click outside staff dropdown to close it
+    document.addEventListener('click', (event) => {
+        if (staffDropdown && staffInput && !staffInput.contains(event.target) && !staffDropdown.contains(event.target)) {
             staffDropdown.classList.remove('show');
         }
     });
+    
+    // Load initial warnings
+    loadWarnings();
+    
+    // Set up real-time updates
+    setupRealTimeUpdates();
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initApp);
+// Run initialization when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
