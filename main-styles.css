@@ -134,31 +134,76 @@ button {
     transition: var(--transition);
 }
 
+/* Enhanced Button Styles */
 .btn {
     padding: 12px 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 14px;
+    box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+}
+
+.btn:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+}
+
+.btn:hover:after {
+    width: 100%;
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), #2a75e8);
     color: white;
+    border-bottom: 3px solid #2865c5;
 }
 
 .btn-primary:hover {
-    background-color: #2a75e8;
+    background: linear-gradient(135deg, #2a75e8, var(--primary-color));
     transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(58, 134, 255, 0.2);
 }
 
 .btn-success {
-    background-color: var(--success-color);
+    background: linear-gradient(135deg, var(--success-color), #2d9d00);
     color: white;
+    border-bottom: 3px solid #248000;
 }
 
 .btn-success:hover {
-    background-color: #2d9d00;
+    background: linear-gradient(135deg, #2d9d00, var(--success-color));
     transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(56, 176, 0, 0.2);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-color), #c01921);
+    color: white;
+    border-bottom: 3px solid #a51218;
+    font-size: 13px;
+    padding: 8px 16px;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c01921, var(--danger-color));
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(217, 4, 41, 0.2);
 }
 
 .btn-icon {
@@ -524,17 +569,65 @@ input:checked ~ .moon-icon {
 }
 
 .logout-btn {
-    background-color: var(--danger-color);
+    background: linear-gradient(135deg, var(--danger-color), #c01921);
     color: white;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
     margin-right: 15px;
+    border-bottom: 2px solid #a51218;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .logout-btn:hover {
-    background-color: #c02a30;
+    background: linear-gradient(135deg, #c01921, var(--danger-color));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(217, 4, 41, 0.2);
+}
+
+.logout-btn:active {
+    transform: translateY(1px);
+}
+
+/* Status message animation */
+.status {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Loading indicator */
+.loading-indicator {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--light-color);
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
