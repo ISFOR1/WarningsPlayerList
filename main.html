@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Player Warnings System</title>
     <link rel="stylesheet" href="main-styles.css">
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -82,6 +86,11 @@
         </div>
     </div>
 
+    <div class="loading-indicator" id="loading-indicator">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="firebase-config.js"></script>
     <script src="main-script.js"></script>
 </body>
 </html>
