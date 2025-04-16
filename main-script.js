@@ -1,4 +1,194 @@
-// Toggle staff dropdown visibility
+// Cookie utility functions - using same approach as login-script.js
+const CookieUtil = {
+    setCookie(name, value, days) {
+        try {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
+            return true;
+        } catch (error) {
+            console.error("Error setting cookie:", error);
+            return false;
+        }
+    },
+    
+    getCookie(name) {
+        try {
+            const cookieArr = document.cookie.split(";");
+            for (let i = 0; i < cookieArr.length; i++) {
+                const cookiePair = cookieArr[i].split("=");
+                const cookieName = cookiePair[0].trim();
+                if (cookieName === name) {
+                    return JSON.parse(decodeURIComponent(cookiePair[1]));
+                }
+            }
+            return null;
+        } catch (error) {
+            console.error("Error getting cookie:", error);
+            return null;
+        }
+    },
+    
+    deleteCookie(name) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    }
+};
+
+// Staff members data - consistent with login-script.js
+const staffMembers = [
+    { name: "ROBLOX", role: "owner" },
+    { name: "IAMISFOR", role: "high-support" },
+    { name: "ModeratorA", role: "high-support" },
+    { name: "Helper789", role: "support" },
+    { name: "Helper456", role: "support" },
+    { name: "Helper123", role: "support" }
+];
+
+// DOM Elements
+const logoutBtn = document.getElementById('logout-btn');
+const themeToggle = document.getElementById('theme-toggle');
+const addWarningBtn = document.getElementById('add-warning-btn');
+const warningForm = document.getElementById('warning-form');
+const usernameInput = document.getElementById('username');
+const reasonInput = document.getElementById('reason');
+const staffInput = document.getElementById('staff');
+const staffDropdown = document.getElementById('staff-dropdown');
+const banPlayerCheckbox = document.getElementById('ban-player');
+const applyBtn = document.getElementById('apply-btn');
+const searchPlayer = document.getElementById('search-player');
+const showBanned = document.getElementById('show-banned');
+const showActive = document.getElementById('show-active');
+const warningsList = document.getElementById('warnings-list');
+const saveStatus = document.getElementById('save-status');
+const errorStatus = document.getElementById('error-status');
+const loadingIndicator = document.getElementById('loading-indicator');
+
+// Current staff
+let currentStaff = null;
+
+// Warnings data
+let warnings = [];
+
+// Show/hide loading indicator
+function showLoading() {
+    if (loadingIndicator) loadingIndicator.style.display = 'flex';
+}
+
+function hideLoading() {
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
+}
+
+// Theme Management
+function setTheme(isDark) {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    localStorage.setItem('dark-theme', isDark);
+}
+
+// Check for saved theme preference or use user preference
+const savedTheme = localStorage.getItem('dark-theme');
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+if (savedTheme !== null) {
+    if (themeToggle) {
+        themeToggle.checked = savedTheme === 'true';
+    }
+    setTheme(savedTheme === 'true');
+} else {
+    if (themeToggle) {
+        themeToggle.checked = prefersDark;
+    }
+    setTheme(prefersDark);
+}
+
+// Firebase references
+const warningsRef = database.ref('warnings');
+
+// Load warnings from Firebase
+function loadWarnings() {
+    showLoading();
+    
+    warningsRef.once('value')
+        .then(snapshot => {
+            const data = snapshot.val();
+            warnings = data ? Object.values(data) : [];
+            renderWarnings();
+            hideLoading();
+        })
+        .catch(error => {
+            console.error("Error loading warnings:", error);
+            showError("Failed to load warnings from the server.");
+            hideLoading();
+        });
+}
+
+// Authentication check
+function checkAuth() {
+    const staffData = CookieUtil.getCookie('currentStaff');
+    if (!staffData) {
+        // Not logged in, redirect to login page
+        window.location.href = 'index.html';
+        return false;
+    }
+    
+    // Set staff name in dropdown
+    if (staffInput) {
+        staffInput.value = staffData.name;
+    }
+    
+    // Store the current staff globally
+    currentStaff = staffData;
+    
+    return staffData;
+}
+
+// Check if current user is owner
+function isOwner() {
+    return currentStaff && currentStaff.role === 'owner';
+}
+
+// Handle logout
+function handleLogout() {
+    CookieUtil.deleteCookie('currentStaff');
+    window.location.href = 'index.html';
+}
+
+// Toggle warning form
+function toggleWarningForm() {
+    if (warningForm) {
+        warningForm.style.display = warningForm.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+// Populate staff dropdown
+function populateStaffDropdown() {
+    if (!staffDropdown) return;
+    
+    staffDropdown.innerHTML = '';
+    
+    staffMembers.forEach(staff => {
+        const staffItem = document.createElement('div');
+        staffItem.className = 'staff-item';
+        staffItem.dataset.name = staff.name;
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = staff.name;
+        
+        const roleSpan = document.createElement('span');
+        roleSpan.className = `staff-role role-${staff.role}`;
+        roleSpan.textContent = staff.role;
+        
+        staffItem.appendChild(nameSpan);
+        staffItem.appendChild(roleSpan);
+        
+        staffItem.addEventListener('click', () => {
+            staffInput.value = staff.name;
+            staffDropdown.classList.remove('show');
+        });
+        
+        staffDropdown.appendChild(staffItem);
+    });
+}
+
 function toggleStaffDropdown() {
     if (staffDropdown) {
         staffDropdown.classList.toggle('show');
