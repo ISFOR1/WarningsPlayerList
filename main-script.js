@@ -66,8 +66,8 @@ const loadingIndicator = document.getElementById('loading-indicator');
 // Current staff
 let currentStaff = null;
 
-// Warnings data
-let warnings = [];
+// Warnings data - stored as object with IDs as keys for better sync
+let warningsMap = {};
 
 // Show/hide loading indicator
 function showLoading() {
@@ -100,23 +100,42 @@ if (savedTheme !== null) {
     setTheme(prefersDark);
 }
 
-// Firebase references
-const warningsRef = database.ref('warnings');
+// Firebase references - ensure we're getting the database reference correctly
+// This needs to run after Firebase is initialized
+let warningsRef;
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        // Make sure we get a fresh reference each time
+        warningsRef = firebase.database().ref('warnings');
+        console.log("Firebase warnings reference created successfully");
+    } catch (error) {
+        console.error("Error initializing Firebase reference:", error);
+    }
+});
 
-// Load warnings from Firebase
+// Load warnings from Firebase - updated for better reliability
 function loadWarnings() {
     showLoading();
     
+    // Make sure we have a valid reference
+    if (!warningsRef) {
+        warningsRef = firebase.database().ref('warnings');
+    }
+    
     warningsRef.once('value')
         .then(snapshot => {
-            const data = snapshot.val();
-            warnings = data ? Object.values(data) : [];
+            const data = snapshot.val() || {};
+            warningsMap = data; // Store as original object with IDs as keys
+            console.log("Warnings loaded:", Object.keys(warningsMap).length);
             renderWarnings();
             hideLoading();
+            
+            // After initial load, set up real-time listeners
+            setupRealTimeUpdates();
         })
         .catch(error => {
             console.error("Error loading warnings:", error);
-            showError("Failed to load warnings from the server.");
+            showError("Failed to load warnings from the server. Check your internet connection.");
             hideLoading();
         });
 }
@@ -217,7 +236,7 @@ function showError(message) {
     }
 }
 
-// Add new warning
+// Add new warning - updated to work more reliably with Firebase
 function addWarning(event) {
     event.preventDefault();
     
@@ -234,7 +253,7 @@ function addWarning(event) {
     showLoading();
     
     const timestamp = new Date().toISOString();
-    const warningId = `warning_${Date.now()}`;
+    const warningId = `warning_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const newWarning = {
         id: warningId,
@@ -245,11 +264,18 @@ function addWarning(event) {
         banned: isBanned
     };
     
+    // Make sure warningsRef is valid
+    if (!warningsRef) {
+        warningsRef = firebase.database().ref('warnings');
+    }
+    
     // Save to Firebase
     warningsRef.child(warningId).set(newWarning)
         .then(() => {
-            // Add to local array
-            warnings.push(newWarning);
+            console.log("Warning added successfully:", warningId);
+            
+            // Add to local map
+            warningsMap[warningId] = newWarning;
             
             // Clear form fields
             usernameInput.value = '';
@@ -266,12 +292,12 @@ function addWarning(event) {
         })
         .catch(error => {
             console.error("Error adding warning:", error);
-            showError("Failed to save warning to the server.");
+            showError("Failed to save warning to the server. Check your internet connection.");
             hideLoading();
         });
 }
 
-// Delete warning
+// Delete warning - updated for better reliability
 function deleteWarning(warningId) {
     if (!isOwner()) {
         showError("Only the owner can delete warnings.");
@@ -281,16 +307,23 @@ function deleteWarning(warningId) {
     if (confirm("Are you sure you want to delete this warning?")) {
         showLoading();
         
+        // Make sure warningsRef is valid
+        if (!warningsRef) {
+            warningsRef = firebase.database().ref('warnings');
+        }
+        
         warningsRef.child(warningId).remove()
             .then(() => {
-                warnings = warnings.filter(warning => warning.id !== warningId);
+                // Delete from local map
+                delete warningsMap[warningId];
+                
                 renderWarnings();
                 showStatus("Warning deleted successfully!");
                 hideLoading();
             })
             .catch(error => {
                 console.error("Error deleting warning:", error);
-                showError("Failed to delete warning from the server.");
+                showError("Failed to delete warning from the server. Check your internet connection.");
                 hideLoading();
             });
     }
@@ -302,36 +335,47 @@ function formatDate(isoString) {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 
-// Render warnings list
+// Render warnings list - updated to use warningsMap
 function renderWarnings() {
     if (!warningsList) return;
     
-    // Filter warnings based on search and filters
-    let filteredWarnings = [...warnings];
+    // Convert map to array for filtering and sorting
+    let warningsArray = Object.values(warningsMap);
     
     // Apply search filter
     if (searchPlayer && searchPlayer.value.trim()) {
         const searchTerm = searchPlayer.value.trim().toLowerCase();
-        filteredWarnings = filteredWarnings.filter(warning => 
+        warningsArray = warningsArray.filter(warning => 
             warning.username.toLowerCase().includes(searchTerm)
         );
     }
     
     // Apply banned/active filters
     if (showBanned && showBanned.checked && !showActive.checked) {
-        filteredWarnings = filteredWarnings.filter(warning => warning.banned);
+        warningsArray = warningsArray.filter(warning => warning.banned);
     } else if (showActive && showActive.checked && !showBanned.checked) {
-        filteredWarnings = filteredWarnings.filter(warning => !warning.banned);
+        warningsArray = warningsArray.filter(warning => !warning.banned);
     }
     
     // Sort warnings by timestamp (newest first)
-    filteredWarnings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    warningsArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     
     // Clear current list
     warningsList.innerHTML = '';
     
+    // If no warnings after filtering
+    if (warningsArray.length === 0) {
+        const noWarnings = document.createElement('div');
+        noWarnings.className = 'empty-list';
+        noWarnings.textContent = searchPlayer && searchPlayer.value.trim() ? 
+            'No warnings found for this search.' : 
+            'No warnings found. Add your first warning using the button above.';
+        warningsList.appendChild(noWarnings);
+        return;
+    }
+    
     // Render each warning
-    filteredWarnings.forEach(warning => {
+    warningsArray.forEach(warning => {
         const warningItem = document.createElement('div');
         warningItem.className = `warning-item ${warning.banned ? 'banned' : ''}`;
         warningItem.dataset.id = warning.id;
@@ -368,56 +412,94 @@ function renderWarnings() {
         // Add delete button for owner
         if (isOwner()) {
             const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
+            deleteBtn.className = 'delete-btn btn btn-danger';
             deleteBtn.textContent = 'Delete';
-            deleteBtn.addEventListener('click', () => deleteWarning(warning.id));
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteWarning(warning.id);
+            });
             warningItem.appendChild(deleteBtn);
         }
         
         warningsList.appendChild(warningItem);
     });
-    
-    // Show message if no warnings
-    if (filteredWarnings.length === 0) {
-        const noWarnings = document.createElement('p');
-        noWarnings.className = 'no-warnings';
-        noWarnings.textContent = 'No warnings found.';
-        warningsList.appendChild(noWarnings);
-    }
 }
 
-// Set up real-time updates from Firebase
+// Set up real-time updates from Firebase - completely revised for better reliability
 function setupRealTimeUpdates() {
+    // Make sure we have a valid reference
+    if (!warningsRef) {
+        warningsRef = firebase.database().ref('warnings');
+    }
+    
+    console.log("Setting up real-time listeners...");
+    
+    // Remove existing listeners if any
+    warningsRef.off();
+    
     // Listen for added warnings
     warningsRef.on('child_added', snapshot => {
         const newWarning = snapshot.val();
-        // Only add if not already in the array
-        if (!warnings.some(w => w.id === newWarning.id)) {
-            warnings.push(newWarning);
+        const warningId = snapshot.key;
+        
+        console.log("Warning added event:", warningId);
+        
+        // Only update if it's not already in our map
+        if (!warningsMap[warningId]) {
+            warningsMap[warningId] = newWarning;
             renderWarnings();
         }
     });
     
     // Listen for removed warnings
     warningsRef.on('child_removed', snapshot => {
-        const removedId = snapshot.val().id;
-        warnings = warnings.filter(w => w.id !== removedId);
-        renderWarnings();
+        const warningId = snapshot.key;
+        
+        console.log("Warning removed event:", warningId);
+        
+        // Remove from our map
+        if (warningsMap[warningId]) {
+            delete warningsMap[warningId];
+            renderWarnings();
+        }
     });
     
     // Listen for changed warnings
     warningsRef.on('child_changed', snapshot => {
         const changedWarning = snapshot.val();
-        const index = warnings.findIndex(w => w.id === changedWarning.id);
-        if (index !== -1) {
-            warnings[index] = changedWarning;
-            renderWarnings();
+        const warningId = snapshot.key;
+        
+        console.log("Warning changed event:", warningId);
+        
+        // Update in our map
+        warningsMap[warningId] = changedWarning;
+        renderWarnings();
+    });
+    
+    // Optional: listen for connection state
+    const connectedRef = firebase.database().ref('.info/connected');
+    connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+            console.log("Connected to Firebase");
+            showStatus("Connected to server");
+        } else {
+            console.log("Disconnected from Firebase");
+            showError("Lost connection to server. Reconnecting...");
         }
     });
 }
 
 // Initialize app
 function init() {
+    console.log("Initializing application...");
+    
+    // Check if Firebase is loaded
+    if (typeof firebase === 'undefined') {
+        console.error("Firebase is not loaded! Check your internet connection.");
+        showError("Could not connect to warning system. Please check your internet connection.");
+        return;
+    }
+    
     // Check if user is authenticated
     const staff = checkAuth();
     if (!staff) return;
@@ -435,8 +517,16 @@ function init() {
         addWarningBtn.addEventListener('click', toggleWarningForm);
     }
     
+    if (applyBtn) {
+        applyBtn.addEventListener('click', addWarning);
+    }
+    
+    // Form submission
     if (warningForm) {
-        warningForm.addEventListener('submit', addWarning);
+        warningForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addWarning(e);
+        });
     }
     
     if (staffInput) {
@@ -466,9 +556,6 @@ function init() {
     
     // Load initial warnings
     loadWarnings();
-    
-    // Set up real-time updates
-    setupRealTimeUpdates();
 }
 
 // Run initialization when DOM is loaded
