@@ -36,8 +36,8 @@ const CookieUtil = {
 
 // Staff members data - consistent with login-script.js
 const staffMembers = [
-    { name: "IAMISFOR", role: "owner" },
-    { name: "HeadMod456", role: "high-support" },
+    { name: "ROBLOX", role: "owner" },
+    { name: "IAMISFOR", role: "high-support" },
     { name: "ModeratorA", role: "high-support" },
     { name: "Helper789", role: "support" },
     { name: "Helper456", role: "support" },
