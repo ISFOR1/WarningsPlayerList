@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Warnings System</title>
+    <link rel="stylesheet" href="main-styles.css">
+<!-- In main.html, replace the Firebase CDN imports with: -->
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="main-script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Player Warnings System</h1>
+            <div class="header-controls">
+                <div class="logout-btn" id="logout-btn">Log Out</div>
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                    <span class="theme-icon sun-icon">☀️</span>
+                    <span class="theme-icon moon-icon">🌙</span>
+                </label>
+            </div>
+            <div class="status status-success" id="save-status">Changes saved</div>
+            <div class="status status-error" id="error-status">Error saving changes</div>
+        </header>
+        
+        <button id="add-warning-btn" class="btn btn-primary">
+            <span class="btn-icon">+</span> Add New Warning
+        </button>
+        
+        <div id="warning-form" class="warning-form" style="display: none;">
+            <h2>Create New Warning</h2>
+            <div class="input-group">
+                <label for="username">Player Username:</label>
+                <input type="text" id="username" placeholder="Place here your Username">
+            </div>
+            
+            <div class="input-group">
+                <label for="reason">Warning Reason:</label>
+                <textarea id="reason" placeholder="Describe the reason for this warning"></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label for="staff">Your Discord Username:</label>
+                <div class="dropdown">
+                    <input type="text" id="staff" placeholder="Select staff member" readonly>
+                    <div id="staff-dropdown" class="dropdown-content">
+                        <!-- Staff list will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ban-checkbox">
+                <label for="ban-player">Ban this player:</label>
+                <input type="checkbox" id="ban-player">
+            </div>
+            
+            <button id="apply-btn" class="btn btn-success">Apply Warning</button>
+        </div>
+        
+        <div class="filters">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-player" placeholder="Search player...">
+            </div>
+            <div class="filter-options">
+                <label>
+                    <input type="checkbox" id="show-banned" checked>
+                    <span class="status-indicator status-banned"></span>
+                    Show Banned
+                </label>
+                <label>
+                    <input type="checkbox" id="show-active" checked>
+                    <span class="status-indicator status-active"></span>
+                    Show Active
+                </label>
+            </div>
+        </div>
+        
+        <div id="warnings-list">
+            <!-- Warnings will be populated by JavaScript -->
+            <div class="empty-list">No warnings found. Add your first warning using the button above.</div>
+        </div>
+    </div>
+
+    <div class="loading-indicator" id="loading-indicator">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="main-script.js"></script>
+</body>
+</html>

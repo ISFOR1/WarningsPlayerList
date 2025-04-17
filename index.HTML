@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Login - Player Warnings System</title>
+    <link rel="stylesheet" href="login-styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-logo">
+            <h1 class="login-title">Player Warnings System</h1>
+            <p class="login-subtitle">Staff Access Only</p>
+        </div>
+        
+        <div class="error-message" id="login-error" style="display: none;">
+            Invalid username or password. Please try again.
+        </div>
+        
+        <div class="login-form">
+            <div class="input-group">
+                <label for="login-username">Username:</label>
+                <input type="text" id="login-username" placeholder="Enter your username">
+            </div>
+            
+            <div class="input-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" placeholder="Enter your password">
+            </div>
+            
+            <button id="login-btn" class="btn btn-primary login-btn">Log In</button>
+        </div>
+        
+        <div class="login-footer">
+            <p>© 2025 MH Warnings System. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script src="login-script.js"></script>
+</body>
+</html>
